@@ -2,12 +2,14 @@ const express = require("express");
 const app = express();
 const port = 3000;
 
-app.get("/", (req, res) => {
-  res.send("hello Back-end Dev!");
-});
+const usersRouter = require("./user");
 
-app.get("/about", (req, res) => {
-  res.send("My name is JJJ");
+app.use(express.json());
+
+app.use("/api", usersRouter);
+
+app.get("/", (req, res) => {
+  res.send("Welcome to Home Page");
 });
 
 app.listen(port, () => {
