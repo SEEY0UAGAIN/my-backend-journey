@@ -1,35 +1,38 @@
 const express = require("express");
 const router = express.Router();
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
-let users = [
-  { id: 1, name: "Pop", age: 25 },
-  { id: 2, name: "May", age: 30 },
-];
-
-router.get("/users", (req, res) => {
+router.get("/users", async (req, res) => {
+  const users = await prisma.user.findMany();
   res.json(users);
 });
 
-router.post("/users", (req, res) => {
-  const newUser = req.body;
-  newUser.id = users.length + 1;
-  users.push(newUser);
+router.post("/users", async (req, res) => {
+  const { name, email, age } = req.body;
+  const newUser = await prisma.user.create({
+    data: { name, email, age },
+  });
   res.status(201).json(newUser);
 });
 
-router.put("/users/:id", (req, res) => {
-  const userId = Number(req.params.id);
-  const userIndex = users.findIndex((u) => u.id === userId);
-  if (userIndex === -1) {
-    return res.status(404).json({ message: "User not Found" });
+router.put("/users/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  const { name, email, age } = req.body;
+  try {
+    const updateUser = await prisma.user.update({
+      where: { id },
+      data: { name, email, age },
+    });
+    res.json(updateUser);
+  } catch (error) {
+    res.status(404).json({ message: "User not found" });
   }
-  users[userIndex] = { ...users[userIndex], ...req.body };
-  res.json(users[userIndex]);
 });
 
-router.delete("/users/:id", (req, res) => {
-  const userId = Number(req.params.id);
-  users = users.find((u) => u.id === userId);
+router.delete("/users/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  await prisma.user.delete({ where: { id } });
   res.json({ message: "User deleted " });
 });
 
